@@ -76,7 +76,7 @@ XGBoost was selected as the final model based on the overall balance of test acc
 
 ---
 
-## -Streamlit Application
+## Streamlit Application
 
 The Streamlit application allows users to:
 
@@ -201,6 +201,7 @@ Displays:
 
 ## Priject Structure
 
+```text
 Customer-Churn-Prediction-System/ 
 │
 ├── app/
@@ -256,6 +257,7 @@ Customer-Churn-Prediction-System/
 ├── .gitignore
 ├── README.md
 └── requirements.txt
+```
 
 ---
 
@@ -288,7 +290,7 @@ Configure your local database using a .env file.
 
 Example:
 ```text
-MYSQL_HOST=127.0.0.1
+MYSQL_HOST=Localhost
 MYSQL_PORT=3306
 MYSQL_USER=root
 MYSQL_PASSWORD=your_password
