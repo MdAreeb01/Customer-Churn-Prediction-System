@@ -1,0 +1,13 @@
+streamlit
+pandas
+numpy
+scikit-learn
+xgboost
+lightgbm
+catboost
+joblib
+mysql-connector-python
+python-dotenv
+plotly
+matplotlib
+seaborn

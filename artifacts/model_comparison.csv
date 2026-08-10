@@ -1,0 +1,7 @@
+Model,Training_Accuracy,Test_Accuracy,Precision,Recall,F1,ROC_AUC,CV_Accuracy
+Logistic Regression,81.03,78.92,62.22,52.41,56.89,70.45,80.39
+Decision Tree,80.26,78.78,60.05,59.09,59.57,72.44,79.25
+Random Forest,85.2,79.49,64.91,49.47,56.15,69.9,80.49
+XGBoost,82.51,79.34,63.17,53.2,57.76,71.0,80.63
+LightGBM,82.46,79.06,63.12,50.8,56.29,70.03,80.81
+CatBoost,81.54,79.63,64.94,50.53,56.84,70.33,80.8
