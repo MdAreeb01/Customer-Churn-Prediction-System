@@ -1,6 +1,6 @@
 # Customer Churn Prediction System
 
-An end-to-end machine learning and business intelligence project for predicting telecom customer churn using XGBoost, Streamlit, MySQL, and Power BI.
+An end-to-end machine learning, Generative AI, and business intelligence system for predicting telecom customer churn using XGBoost, Streamlit, Groq API, MySQL, and Power BI.
 
 ---
 
@@ -85,6 +85,7 @@ The Streamlit application allows users to:
 - View churn probability
 - View customer risk level
 - Estimate total charges
+- Generate an AI interpretable summary and practical customer-retention recommendations
 - Save predictions to MySQL
 - View prediction history
 - Analyze prediction results using interactive Plotly visualizations
@@ -163,6 +164,57 @@ Displays:
 
 ---
 
+## 🤖 AI-Powered Churn Analysis
+
+The system integrates Generative AI using the Groq API to provide a business-oriented explanation of each machine learning prediction.
+
+After the XGBoost model generates a churn prediction, churn probability, and risk level, the customer information and prediction results are passed to the AI assistant. The AI then generates an interpretable summary and practical customer-retention recommendations.
+
+### AI Workflow
+
+```text
+Customer Information
+        ↓
+XGBoost Churn Prediction
+        ↓
+Churn Probability + Risk Level
+        ↓
+Groq API
+        ↓
+AI-Powered Churn Analysis
+        ↓
+Risk Explanation + Retention Recommendations
+```
+
+### AI Features
+
+- Prediction Explanation — Explains factors that may be associated with the customer's predicted churn risk.
+- Risk Summary — Provides a concise interpretation of the model's predicted risk.
+- Retention Recommendations — Suggests practical customer-retention actions based on the customer's profile and prediction.
+- Error Handling — AI failures do not affect the underlying XGBoost prediction.
+- Secure API Configuration — The Groq API key is stored in a local .env file and is excluded from GitHub using .gitignore.
+
+### Example
+
+For a customer predicted as high risk, the AI assistant may provide:
+
+#### Why?
+The customer has a relatively short tenure and a month-to-month contract, which may be associated with increased churn risk.
+
+#### Risk Summary
+The machine learning model indicates a high likelihood of churn for this customer.
+
+#### Recommended Action
+Consider offering a longer-term contract, a targeted loyalty incentive, and proactive customer support.
+
+### Important Note
+
+The AI assistant does not make the churn prediction. The XGBoost model remains responsible for the prediction, probability, and risk classification. Generative AI is used to interpret the model output and provide business-oriented recommendations.
+
+AI-generated recommendations should be treated as decision-support information and not as a replacement for business judgment.
+
+--- 
+
 ## Technologies Used
 
 ### Programming & Machine Learning
@@ -180,6 +232,8 @@ Displays:
 
 - Streamlit
 - Plotly
+- Groq API
+- Llama 3.3 70B
 
 ### Database
 
@@ -206,6 +260,7 @@ Customer-Churn-Prediction-System/
 │
 ├── app/
 │   ├── about.py
+|   ├── ai_assistant.py
 │   ├── app.py
 │   ├── database.py
 │   ├── hero_section.py
@@ -265,26 +320,37 @@ Customer-Churn-Prediction-System/
 
 ### 1. Clone the repository
 
-- git clone https://github.com/MdAreeb01/Customer-Churn-Prediction-System.git
+```text 
+git clone https://github.com/MdAreeb01/Customer-Churn-Prediction-System.git 
 
 - cd Customer-Churn-Prediction-System
+```
 
 ### 2. Create a virtual environment
 
-- python -m venv venv
+```text
+python -m venv venv
+```
 
 Activate it on Windows:
 
-- venv\Scripts\activate
+```text
+venv\Scripts\activate
+```
 
 ### 3. Install dependencies
 
-- pip install -r requirements.txt
+```text
+pip install -r requirements.txt
+```
 
 ### 4. Configure MySQL
 
 Create a MySQL database named:
-- customer_churn_db
+
+```text
+customer_churn_db
+```
 
 Configure your local database using a .env file.
 
@@ -300,7 +366,9 @@ Do not commit the .env file to GitHub.
 
 ### 5. Run the Streamlit application
 
-- streamlit run app/app.py
+```text
+streamlit run app/app.py
+```
 
 ---
 
@@ -310,6 +378,8 @@ Do not commit the .env file to GitHub.
 - Multi-model comparison
 - XGBoost-based churn prediction
 - Churn probability and risk classification
+- AI-powered prediction explanations
+- AI-generated customer retention recommendations
 - Interactive Streamlit interface
 - MySQL prediction storage
 - Prediction history
@@ -325,8 +395,6 @@ Do not commit the .env file to GitHub.
 
 Planned improvements include:
 
-- AI-powered prediction explanations
-- AI-generated customer retention recommendations
 - Natural-language analysis of prediction history
 - Streamlit deployment
 - Improved customer risk segmentation
