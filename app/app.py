@@ -9,11 +9,29 @@ from model_performance import show_model_performance
 from model_comparison import model_comparison_content
 from hero_section import hero_section_details
 from about import about_page
+from dotenv import load_dotenv
+from pathlib import Path
+import os
+from ai_assistant import generate_churn_explanation
+import time
+import re
 
 st.set_page_config(
     page_title="Customer Churn Prediction",
     page_icon="📊",
     layout="wide"
+)
+
+st.markdown(
+    """
+    <style>
+        /* Reduce vertical spacing between form elements */
+        div[data-testid="stVerticalBlock"] {
+            gap: 0.4rem;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
 if "form_version" not in st.session_state:
@@ -29,7 +47,7 @@ if st.session_state.get("show_saved_toast", False):
                 .querySelector('section.main')
                 .scrollTo({
                     top: 0,
-                    behavior: 'smooth'
+                    behavior: 'auto'
                 });
         </script>
         """,
@@ -50,13 +68,21 @@ def check_model():
 def check_database():
 
     try:
+
+        # Find .env in project root
+        BASE_DIR = Path(__file__).resolve().parent.parent
+        ENV_FILE = BASE_DIR / ".env"
+
+        load_dotenv(ENV_FILE)
+
+        # Connect to MySQL
         connection = mysql.connector.connect(
-            host = "127.0.0.1",
-            port = 3306,
-            user = "root",
-            password = "3306",
-            database = "customer_churn_db"
-        )
+            host = os.getenv("MYSQL_HOST"),
+            port = int(os.getenv("MYSQL_PORT")),
+            user = os.getenv("MYSQL_USER"),
+            password = os.getenv("MYSQL_PASSWORD"),
+            database = os.getenv("MYSQL_DATABASE")
+)
 
         connection.close()
 
@@ -67,7 +93,7 @@ def check_database():
         
 # st.sidebar.image("logo.png", width=120)
 st.sidebar.title("📊 Customer Churn")
-st.sidebar.caption("### Machine Learning Dashboard")
+st.sidebar.caption("Machine Learning Dashboard")
 st.sidebar.divider()
 
 page = st.sidebar.radio(
@@ -86,7 +112,57 @@ st.sidebar.divider()
 
 st.sidebar.success("Model: XGBoost")
 
-st.sidebar.caption("Version 1.0")
+st.sidebar.caption("Version 2.0")
+
+def format_ai_response(text):
+
+    if not text:
+        return text
+
+    # Remove Markdown inline-code formatting
+    text = text.replace("`", "")
+
+    # Normalize line breaks
+    text = text.replace("\r\n", "\n").strip()
+
+    # Make sure section headings always start on a new line
+    text = re.sub(
+        r"\s*###\s*Why\?\s*",
+        "\n\n### Why?\n\n",
+        text,
+        flags=re.IGNORECASE
+    )
+
+    text = re.sub(
+        r"\s*###\s*Risk Summary\s*",
+        "\n\n### Risk Summary\n\n",
+        text,
+        flags=re.IGNORECASE
+    )
+
+    text = re.sub(
+        r"\s*###\s*Recommended Actions\s*",
+        "\n\n### Recommended Actions\n\n",
+        text,
+        flags=re.IGNORECASE
+    )
+
+    # Put numbered recommendations on separate lines
+    text = re.sub(
+        r"\s+(\d+\.)\s+",
+        r"\n\1 ",
+        text
+    )
+
+    return text.strip()
+
+def stream_ai_response(text):
+    """Yield text chunks for streamlit's typewriter effect."""
+    tokens = re.findall(r"\S+|\s+", text)
+
+    for token in tokens:
+        yield token
+        time.sleep(0.02)
 
 if page == "Home":
 
@@ -126,245 +202,261 @@ elif page == "Predict Customer Churn":
     
     st.subheader("Customer Information")
 
+    st.caption(
+        "Select the customer's information below. "
+        "Dependent service fields will be enabled automatically."
+    )
+
     form_version = st.session_state.form_version
 
-    # Initialize save flag
-    if "saved" not in st.session_state:
-        st.session_state.saved = False
+    with st.container(border = True):        
 
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        gender = st.pills("Gender:", ["Female", "Male"], selection_mode = "single", default = None, key = f"gender_{form_version}")
-    
-        senior = st.pills("Senior Citizen:", ["Yes", "No"], selection_mode = "single", default = None, key = f"senior_{form_version}")
-    
-        partner = st.pills("Partner", ["Yes", "No"], selection_mode = "single", default = None, key = f"partner_{form_version}")
-    
-        dependents = st.pills("Dependents", ["Yes", "No"], selection_mode = "single", default = None, key = f"dependents_{form_version}")
-
-        paperless_billing = st.pills("Paperless Billing", ["Yes", "No"], selection_mode = "single", default = None, key = f"paperless_billing_{form_version}")
+        col1, col2 = st.columns(2)
         
-        contract = st.selectbox(
-            "Contract",
-            [
-                "Month-to-month",
-                "One year",
-                "Two year"
-            ],
-            key = f"contract_{form_version}"
-        )
-    
-        payment_method = st.selectbox(
-            "Payment Method", 
-            [
-            "Bank transfer (automatic)",
-            "Credit card (automatic)",
-            "Electronic check",
-            "Mailed check"
-            ],
-            key = f"payment_method_{form_version}"
-        )
+        with col1:
+
+            st.markdown("###### Account & Customer Details")
+
+            gender = st.pills("Gender:", ["Female", "Male"], selection_mode = "single", default = None, key = f"gender_{form_version}")
         
-        monthly_charges = st.number_input(
-            "Monthly Charges",
-            18.0, 
-            120.0,
-            70.0,
-            key = f"monthly_charges_{form_version}"
-        )
-
-        tenure = st.slider(
-            "Tenure (Months)",
-            0,
-            72, 
-            12,
-            key = f"tenure_{form_version}"
-        )
-
-    with col2:
-
-        phone_service = st.pills("Phone Service", ["Yes", "No"], 
-                                 selection_mode = "single", default = None, 
-                                 key = f"phone_service_{form_version}")
-
-        if phone_service == "No":
-
-            multiple_lines = "No phone service"
-
-            col1, col2 = st.columns([2, 3])
-
-            with col1:
-                st.pills(
-                    "Multiple Lines", ["No phone service"],
-                    default = "No phone service", disabled = True, key = f"multiple_lines_disabled_{form_version}")
-
-            with col2:
-                st.caption("Multiple Lines is automatically set to No phone service because Phone Service is No.")
-
-        elif phone_service == "Yes":
-
-            multiple_lines = st.pills(
-            "Multiple Lines", ["Yes", "No"],
-            selection_mode = "single",
-            default = None,
-            key = f"multiple_lines_{form_version}"
-            )
-
-        else:
-            multiple_lines = None
-
-            st.pills(
-                "Multiple Lines",
-                ["No", "Yes"],
-                disabled = True,
-                key = f"multiple_lines_empty_{form_version}"
-            )
+            senior = st.pills("Senior Citizen:", ["Yes", "No"], selection_mode = "single", default = None, key = f"senior_{form_version}")
         
-        internet_service = st.pills(
-            "Internet Service", ["DSL", "Fiber optic", "No"],
-            selection_mode = "single", default = None, key = f"internet_service_{form_version}")
+            partner = st.pills("Partner:", ["Yes", "No"], selection_mode = "single", default = None, key = f"partner_{form_version}")
+        
+            dependents = st.pills("Dependents:", ["Yes", "No"], selection_mode = "single", default = None, key = f"dependents_{form_version}")
 
-        if internet_service == "No":
+            paperless_billing = st.pills("Paperless Billing:", ["Yes", "No"], selection_mode = "single", default = None, key = f"paperless_billing_{form_version}")
             
-            online_security = "No internet service"
-            online_backup = "No internet service"
-            device_protection = "No internet service"
-            tech_support = "No internet service"
-            streaming_tv = "No internet service"
-            streaming_movies = "No internet service"
-
-            col1, col2 = st.columns([2, 3])
-
-            with col1:
-                st.pills(
-                    "Online Security", ["No internet service"],
-                    default = "No internet service", disabled = True, key = f"online_security_disabled_{form_version}")
-
-                st.pills(
-                    "Online Backup", ["No internet service"],
-                    default = "No internet service", disabled = True, key = f"online_backup_disabled_{form_version}")
-
-                st.pills(
-                    "Device Protection", ["No internet service"],
-                    default = "No internet service", disabled = True, key = f"device_protection_disabled_{form_version}")
-
-                st.pills(
-                    "Tech Support", ["No internet service"],
-                    default = "No internet service", disabled = True, key = f"tech_support_disabled_{form_version}")
-
-                st.pills(
-                    "Streaming TV", ["No internet service"],
-                    default = "No internet service", disabled = True, key = f"streaming_tv_disabled_{form_version}")
-
-                st.pills(
-                    "Streaming Movies", ["No internet service"],
-                    default = "No internet service", disabled = True, key = f"streaming_movies_disabled_{form_version}")
-
-            with col2:
-                st.caption("Related services are automatically set to"
-                           "'No internet service' because Internet Service is No.")
-
-        elif internet_service == "DSL" or internet_service == "Fiber optic":
-
-            online_security = st.pills(
-            "Online Security", ["Yes", "No"],
-            selection_mode = "single",
-            default = None,
-            key = f"online_security_{form_version}"
+            contract = st.selectbox(
+                "Contract:",
+                [
+                    "Month-to-month",
+                    "One year",
+                    "Two year"
+                ],
+                key = f"contract_{form_version}"
             )
-
-            online_backup = st.pills(
-            "Online Backup", ["Yes", "No"],
-            selection_mode = "single",
-            default = None,
-            key = f"online_backup_{form_version}"
-            )
-
-            device_protection = st.pills(
-            "Device Protection", ["Yes", "No"],
-            selection_mode = "single",
-            default = None,
-            key = f"device_protection_{form_version}"
-            )
-
-            tech_support = st.pills(
-            "Tech Support", ["Yes", "No"],
-            selection_mode = "single",
-            default = None,
-            key = f"tech_support_{form_version}"
-            )
-
-            streaming_tv = st.pills(
-            "Streaming TV", ["Yes", "No"],
-            selection_mode = "single",
-            default = None,
-            key = f"streaming_tv_{form_version}"
-            )
-
-            streaming_movies = st.pills(
-            "Streaming Movies", ["Yes", "No"],
-            selection_mode = "single",
-            default = None,
-            key = f"streaming_movies_{form_version}"
-            )
-
-        else:
-            online_security = None
-
-            st.pills(
-                "Online Security",
-                ["No", "Yes"],
-                disabled = True,
-                key = f"online_security_empty_{form_version}"
-            )
-
-            online_backup = None
-
-            st.pills(
-                "Online Backup",
-                ["No", "Yes"],
-                disabled = True,
-                key = f"online_backup_empty_{form_version}"
-            )
-
-            device_protection = None
-
-            st.pills(
-                "Device Protection",
-                ["No", "Yes"],
-                disabled = True,
-                key = f"device_protection_empty_{form_version}"
-            )
-
-            tech_support = None
-
-            st.pills(
-                "Tech Support",
-                ["No", "Yes"],
-                disabled = True,
-                key = f"tech_support_empty_{form_version}"
-            )
-
-            streaming_tv = None
-
-            st.pills(
-                "Streaming TV",
-                ["No", "Yes"],
-                disabled = True,
-                key = f"streaming_tv_empty_{form_version}"
-            )
-
-            streaming_movies = None
-
-            st.pills(
-                "Streaming Movies",
-                ["No", "Yes"],
-                disabled = True,
-                key = f"streaming_movies_empty_{form_version}"
+        
+            payment_method = st.selectbox(
+                "Payment Method:",
+                [
+                "Bank transfer (automatic)",
+                "Credit card (automatic)",
+                "Electronic check",
+                "Mailed check"
+                ],
+                key = f"payment_method_{form_version}"
             )
             
-    predict_clicked = st.button("Predict", type = "primary", use_container_width = True)
+            monthly_charges = st.number_input(
+                "Monthly Charges:",
+                18.0, 
+                120.0,
+                70.0,
+                key = f"monthly_charges_{form_version}"
+            )
+
+            tenure = st.slider(
+                "Tenure (Months):",
+                0,
+                72, 
+                12,
+                key = f"tenure_{form_version}"
+            )
+
+        with col2:
+
+            st.markdown("###### Service Details")
+
+            phone_service = st.pills("Phone Service:", ["Yes", "No"], 
+                                    selection_mode = "single", default = None, 
+                                    key = f"phone_service_{form_version}")
+
+            if phone_service == "No":
+
+                multiple_lines = "No phone service"
+
+                col1, col2 = st.columns([2, 3])
+
+                with col1:
+                    st.pills(
+                        "Multiple Lines:", ["No phone service"],
+                        default = "No phone service", disabled = True, key = f"multiple_lines_disabled_{form_version}")
+
+                with col2:
+                    st.caption("Multiple Lines is automatically set to No phone service because Phone Service is No.")
+
+            elif phone_service == "Yes":
+
+                multiple_lines = st.pills(
+                "Multiple Lines:", ["Yes", "No"],
+                selection_mode = "single",
+                default = None,
+                key = f"multiple_lines_{form_version}"
+                )
+
+            else:
+                multiple_lines = None
+
+                st.pills(
+                    "Multiple Lines:",
+                    ["Yes", "No"],
+                    disabled = True,
+                    key = f"multiple_lines_empty_{form_version}"
+                )
+            
+            internet_service = st.pills(
+                "Internet Service:", ["DSL", "Fiber optic", "No"],
+                selection_mode = "single", default = None, key = f"internet_service_{form_version}")
+
+            if internet_service == "No":
+                
+                online_security = "No internet service"
+                online_backup = "No internet service"
+                device_protection = "No internet service"
+                tech_support = "No internet service"
+                streaming_tv = "No internet service"
+                streaming_movies = "No internet service"
+
+                col1, col2 = st.columns([2, 3])
+
+                with col1:
+                    st.pills(
+                        "Online Security:", ["No internet service"],
+                        default = "No internet service", disabled = True, key = f"online_security_disabled_{form_version}")
+
+                    st.pills(
+                        "Online Backup:", ["No internet service"],
+                        default = "No internet service", disabled = True, key = f"online_backup_disabled_{form_version}")
+
+                    st.pills(
+                        "Device Protection:", ["No internet service"],
+                        default = "No internet service", disabled = True, key = f"device_protection_disabled_{form_version}")
+
+                    st.pills(
+                        "Tech Support:", ["No internet service"],
+                        default = "No internet service", disabled = True, key = f"tech_support_disabled_{form_version}")
+
+                    st.pills(
+                        "Streaming TV:", ["No internet service"],
+                        default = "No internet service", disabled = True, key = f"streaming_tv_disabled_{form_version}")
+
+                    st.pills(
+                        "Streaming Movies:", ["No internet service"],
+                        default = "No internet service", disabled = True, key = f"streaming_movies_disabled_{form_version}")
+
+                with col2:
+                    st.caption("Related services are automatically set to"
+                            "'No internet service' because Internet Service is No.")
+
+            elif internet_service in ("DSL","Fiber optic"):
+
+                online_security = st.pills(
+                "Online Security:", ["Yes", "No"],
+                selection_mode = "single",
+                default = None,
+                key = f"online_security_{form_version}"
+                )
+
+                online_backup = st.pills(
+                "Online Backup:", ["Yes", "No"],
+                selection_mode = "single",
+                default = None,
+                key = f"online_backup_{form_version}"
+                )
+
+                device_protection = st.pills(
+                "Device Protection:", ["Yes", "No"],
+                selection_mode = "single",
+                default = None,
+                key = f"device_protection_{form_version}"
+                )
+
+                tech_support = st.pills(
+                "Tech Support:", ["Yes", "No"],
+                selection_mode = "single",
+                default = None,
+                key = f"tech_support_{form_version}"
+                )
+
+                streaming_tv = st.pills(
+                "Streaming TV:", ["Yes", "No"],
+                selection_mode = "single",
+                default = None,
+                key = f"streaming_tv_{form_version}"
+                )
+
+                streaming_movies = st.pills(
+                "Streaming Movies:", ["Yes", "No"],
+                selection_mode = "single",
+                default = None,
+                key = f"streaming_movies_{form_version}"
+                )
+
+            else:
+                online_security = None
+
+                st.pills(
+                    "Online Security:",
+                    ["Yes", "No"],
+                    disabled = True,
+                    key = f"online_security_empty_{form_version}"
+                )
+
+                online_backup = None
+
+                st.pills(
+                    "Online Backup:",
+                    ["Yes", "No"],
+                    disabled = True,
+                    key = f"online_backup_empty_{form_version}"
+                )
+
+                device_protection = None
+
+                st.pills(
+                    "Device Protection:",
+                    ["Yes", "No"],
+                    disabled = True,
+                    key = f"device_protection_empty_{form_version}"
+                )
+
+                tech_support = None
+
+                st.pills(
+                    "Tech Support:",
+                    ["Yes", "No"],
+                    disabled = True,
+                    key = f"tech_support_empty_{form_version}"
+                )
+
+                streaming_tv = None
+
+                st.pills(
+                    "Streaming TV:",
+                    ["Yes", "No"],
+                    disabled = True,
+                    key = f"streaming_tv_empty_{form_version}"
+                )
+
+                streaming_movies = None
+
+                st.pills(
+                    "Streaming Movies:",
+                    ["Yes", "No"],
+                    disabled = True,
+                    key = f"streaming_movies_empty_{form_version}"
+                )
+
+    predict_col1, predict_col2, predict_col3 = st.columns([1, 2, 1])
+
+    with predict_col2:
+            
+        predict_clicked = st.button(
+            "Predict", 
+            type = "primary", 
+            use_container_width = True
+        )
 
     if predict_clicked:
 
@@ -416,9 +508,9 @@ elif page == "Predict Customer Churn":
                 st.session_state.prediction = prediction
                 st.session_state.probability = probability
                 st.session_state.risk = risk
-    
-                # Reset save flag for this new prediction
-                st.session_state.saved = False
+
+                # Clear previous AI explanation
+                st.session_state.ai_explanation = None
         
                 # Store the input values too
                 st.session_state.customer_data = {
@@ -471,7 +563,7 @@ elif page == "Predict Customer Churn":
         # Prediction Explanation Panel
         st.divider()
 
-        st.subheader("Prediction Explaination")
+        st.subheader("Prediction Explanation")
 
         reasons = []
 
@@ -554,52 +646,138 @@ elif page == "Predict Customer Churn":
         else:
             st.success(f"✅ Customer is likely to stay")
 
-        save_clicked = st.button(
-            "💾 Save Prediction",
-            type = "primary",
-            use_container_width = True,
-            disabled = st.session_state.saved
+        # Generate AI explanation
+        st.divider()
+
+        st.subheader("🤖 AI Churn Analysis")
+
+        st.caption(
+            "Get an AI-generated explanation of the model prediction "
+            "and practical customer-retention recommendations."
         )
 
-        if save_clicked:
-    
-            data = st.session_state.customer_data
-    
-            saved = save_prediction(
-                data["gender"],
-                data["senior"],
-                data["partner"],
-                data["dependents"],
-                data["tenure"],
-                data["phone_service"],
-                data["internet_service"],
-                data["contract"],
-                data["monthly_charges"],
-                prediction,
-                probability,
-                risk
-            )
-    
-            if saved:
+        if "ai_explanation" not in st.session_state:
+            st.session_state.ai_explanation = None
 
-                # Show toast after page refresh
-                st.session_state.show_saved_toast = True
+        if st.button("✨ Generate AI Explanation", type = "secondary"):
 
-                # Remove previous prediction
-                st.session_state.pop("prediction", None)
-                st.session_state.pop("probability", None)
-                st.session_state.pop("risk", None)
-                st.session_state.pop("customer_data", None)
+            with st.spinner("Analyzing customer risk with AI..."):
 
-                # Create a completely new set of input widgets
-                st.session_state.form_version += 1
-    
-                # Refresh Page
-                st.rerun()
-                
+                explanation = (
+                    generate_churn_explanation(
+                        gender,
+                        senior,
+                        partner,
+                        dependents,
+                        tenure,
+                        phone_service,
+                        internet_service,
+                        contract,
+                        monthly_charges,
+                        prediction,
+                        probability,
+                        risk
+                    )
+                )
+
+            if explanation:
+
+                # Clean and normalize the model's Markdown.
+                explanation = format_ai_response(explanation)
+
+                # Store the final explanation in session state
+                st.session_state.ai_explanation = explanation
+
+                st.markdown("### AI Analysis")
+
+                # Stream the completed AI response with a typewriter
+                # Reserve the AI area before starting the animation
+                with st.container(
+                    border = True,
+                    height = 500
+                ):
+
+                    st.write_stream(
+                        stream_ai_response(explanation),
+                        cursor = "▌",
+                    )
+
+                st.caption(
+                    "🤖 AI-generated insight: "
+                    "This explanation is based on the machine learning "
+                    "prediction and customer attributes and should be used "
+                    "as decision support, not as a replacement for business judgment."
+                )
+
+            elif st.session_state.ai_explanation is None:
+
+                st.info( 
+                    "Click **Generate AI Explanation** to get an "
+                    "AI-powered interpretation of this prediction."
+                )
+
             else:
-                st.error("Unable to save prediction. "
-                         "Please check the database connection.")
+                st.warning(
+                    "⚠️ AI explanation is temporarily unavailable. "
+                    "Your churn prediction is still available."
+                )
+
+        st.divider()
+
+        save_area = st.empty()
+
+        with save_area.container():
+
+            save_col1, save_col2, save_col3 = st.columns([1, 2, 1])
+
+            with save_col2:
+
+                save_clicked = st.button(
+                    "💾 Save Prediction",
+                    type = "primary",
+                    use_container_width = True
+                )
+
+            if save_clicked:
+
+                data = st.session_state.customer_data
+
+                saved = save_prediction(
+                    data["gender"],
+                    data["senior"],
+                    data["partner"],
+                    data["dependents"],
+                    data["tenure"],
+                    data["phone_service"],
+                    data["internet_service"],
+                    data["contract"],
+                    data["monthly_charges"],
+                    prediction,
+                    probability,
+                    risk
+                )
+
+                if saved:
+
+                    # Show toast after page refresh
+                    st.session_state.show_saved_toast = True
+
+                    # Remove previous prediction
+                    st.session_state.pop("prediction", None)
+                    st.session_state.pop("probability", None)
+                    st.session_state.pop("risk", None)
+                    st.session_state.pop("customer_data", None)
+                    st.session_state.pop("ai_explanation", None)
+
+                    # Create a completely new set of input widgets
+                    st.session_state.form_version += 1
+
+                    # Refresh Page
+                    st.rerun()
+                    
+                else:
+                    st.error("Unable to save prediction. "
+                                "Please check the database connection.")
 
 elif page == "Prediction History":
     

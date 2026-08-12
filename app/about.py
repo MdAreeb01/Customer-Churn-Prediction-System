@@ -131,4 +131,4 @@ def about_page():
     st.divider()
     
     # Bonus Touch
-    st.caption("Version 1.0 | Customer Churn Prediction System")
+    st.caption("Version 2.0 | Customer Churn Prediction System")
