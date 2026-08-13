@@ -322,8 +322,9 @@ Customer-Churn-Prediction-System/
 
 ```text 
 git clone https://github.com/MdAreeb01/Customer-Churn-Prediction-System.git 
-
-- cd Customer-Churn-Prediction-System
+```
+```text
+cd Customer-Churn-Prediction-System
 ```
 
 ### 2. Create a virtual environment
