@@ -1,20 +1,23 @@
 import joblib
+from pathlib import Path    
 import streamlit as st
 import plotly.express as px
 import pandas as pd
 import plotly.graph_objects as go
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 # Load Evaluation Metrics
-metrics = joblib.load("../artifacts/model_metrics.pkl")
+metrics = joblib.load(BASE_DIR / "artifacts" / "model_metrics.pkl")
 
 # Load Confusion Metrics
-cm = joblib.load("../artifacts/confusion_matrix.pkl")
+cm = joblib.load(BASE_DIR / "artifacts" / "confusion_matrix.pkl")
 
 # Load ROC Data
-roc_data = joblib.load("../artifacts/roc_curve.pkl")
+roc_data = joblib.load(BASE_DIR / "artifacts" / "roc_curve.pkl")
 
 # Load Feature Importance
-feature_importance = joblib.load("../artifacts/feature_importance.pkl")
+feature_importance = joblib.load(BASE_DIR / "artifacts" / "feature_importance.pkl")
 
 def show_model_performance():
 

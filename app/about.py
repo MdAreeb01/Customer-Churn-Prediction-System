@@ -10,7 +10,7 @@ def about_page():
     
     This project is an end-to-end Machine Learning application developed to predict whether a telecom customer is likely to churn.
     
-    The application integrates Machine Learning, SQL Database Management, Data Visualization, and Interactive Dashboards to provide actionable business insights.
+    The application integrates Machine Learning, SQL Database Management, Data Visualization, AI-Powered Churn Analysis, and Interactive Dashboards to provide actionable business insights.
     """)
 
     st.divider()
@@ -23,7 +23,7 @@ def about_page():
     with tech1:
         st.markdown("""
         
-        ### Programming
+        ##### Programming
         
         - Python
         - Pandas
@@ -34,7 +34,7 @@ def about_page():
     with tech2:
         st.markdown("""
         
-        ### Machine Learning
+        ##### Machine Learning
         
         - Scikit-learn
         - XGBoost
@@ -45,7 +45,7 @@ def about_page():
     with tech3:
         st.markdown("""
         
-        ### Development
+        ##### Development
         
         - Streamlit
         - MySQL
@@ -69,6 +69,7 @@ def about_page():
     7. Deployment using Streamlit
     8. Prediction Storage using MySQL
     9. Interactive Dashboard
+    10. AI-Powered Explanation Generation
     
     """)
 
@@ -79,17 +80,13 @@ def about_page():
 
     st.markdown("""
     
-    Dataset Name:
-
-    **Telco Customer Churn**
+    Dataset Name: **Telco Customer Churn**
 
     Records: **7043**
 
     Features: **21 Original Features**
 
-    Target Variable:
-
-    **Churn**
+    Target Variable: **Churn**
     
     """)
 
@@ -120,9 +117,7 @@ def about_page():
 
     st.info("""
     
-    Developed by:
-    
-    **Mohd Areeb**
+    Developed by: **Mohd Areeb**
     
     Machine Learning | Data Science | Python | SQL | Power BI
     

@@ -1,14 +1,17 @@
 import joblib 
 import pandas as pd 
+from pathlib import Path
 
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 # Load Model
-model = joblib.load("../models/xgboost_model.pkl")
+model = joblib.load(BASE_DIR / "models" / "xgboost_model.pkl")
 
 # Load Scaler
-scaler = joblib.load("../models/scaler.pkl")
+scaler = joblib.load(BASE_DIR / "models" / "scaler.pkl")
 
 # Load Feature Names
-feature_columns = joblib.load("../models/feature_columns.pkl")
+feature_columns = joblib.load(BASE_DIR / "models" / "feature_columns.pkl")
 
 # Prediction Function
 def predict_customer(

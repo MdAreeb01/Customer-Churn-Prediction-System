@@ -16,6 +16,8 @@ from ai_assistant import generate_churn_explanation
 import time
 import re
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 st.set_page_config(
     page_title="Customer Churn Prediction",
     page_icon="📊",
@@ -59,7 +61,7 @@ if st.session_state.get("show_saved_toast", False):
 def check_model():
 
     try:
-        joblib.load("../models/xgboost_model.pkl")
+        joblib.load(BASE_DIR / "models" / "xgboost_model.pkl")
         return "🟢 Loaded"
 
     except:
@@ -70,7 +72,6 @@ def check_database():
     try:
 
         # Find .env in project root
-        BASE_DIR = Path(__file__).resolve().parent.parent
         ENV_FILE = BASE_DIR / ".env"
 
         load_dotenv(ENV_FILE)

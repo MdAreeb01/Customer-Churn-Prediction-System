@@ -9,8 +9,10 @@ def hero_section_details():
     
     This application predicts whether a telecom customer is likely to churn using an optimized   **XGBoost** model.
     
-    The project integrates **Machine Learning, SQL, Streamlit, Plotly, and Power BI** into a complete analytics solution.
+    The project integrates **Machine Learning, SQL, Streamlit, Plotly, Groq AI, and Power BI** into a complete analytics solution.
     """)
+
+    st.divider()
     
     # KPI Cards
     col1,col2,col3,col4 = st.columns(4)
@@ -71,38 +73,26 @@ def hero_section_details():
     
     st.code("""
     Dataset
-    
     ↓
-    
     Data Cleaning
-    
     ↓
-    
     EDA
-    
     ↓
-    
     Feature Engineering
-    
     ↓
-    
     Model Training
-    
     ↓
-    
     XGBoost
-    
     ↓
-    
-    Prediction
-    
+    Churn Prediction
     ↓
-    
     MySQL
-    
     ↓
-    
-    Dashboard
+    Power BI
+    ↓
+    Groq AI
+    ↓
+    Actionable Insights
     """)
     
     # Quick Navigation
@@ -118,8 +108,10 @@ def hero_section_details():
     
     3️⃣ Generate Prediction
     
-    4️⃣ Save Prediction
+    4️⃣ Generate AI-Powered Explanation
     
-    5️⃣ Analyze Prediction History
+    5️⃣ Save Prediction
+
+    6️⃣ Analyze Prediction History
     
     """)

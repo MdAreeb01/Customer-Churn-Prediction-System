@@ -1,9 +1,12 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load the CSV
-comparison = pd.read_csv("../artifacts/model_comparison.csv")
+comparison = pd.read_csv(BASE_DIR / "artifacts" / "model_comparison.csv")
 
 display_comparison = comparison[
 [
