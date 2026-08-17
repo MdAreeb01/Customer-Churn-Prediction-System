@@ -394,7 +394,7 @@ streamlit run app/app.py
 
 ---
 
-#### Live Demo: https://customer-churn-prediction-system-btqmgwqbcew5lovv8fkzz6.streamlit.app
+#### Live Demo: https://customer-churn-retention-ai.streamlit.app/
 
 ---
 
