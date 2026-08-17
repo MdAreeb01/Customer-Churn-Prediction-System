@@ -1,9 +1,14 @@
 import os 
 from groq import Groq
 from dotenv import load_dotenv 
+from pathlib import Path
+
+# Find .env in project root
+BASE_DIR = Path(__file__).resolve().parent.parent
+ENV_FILE = BASE_DIR / ".env"
 
 # Load environment variables from project root
-load_dotenv()
+load_dotenv(ENV_FILE)
 
 # Remove invalid SSL certificate environment variable
 # so httpx can use the normal certificate configuration.
@@ -54,25 +59,31 @@ Machine Learning Prediction:
 
 Provide a concise business-oriented explanation.
 
-Structure your response as:
+Structure your response EXACTLY as follows:
 
-### Why?
+## Why?
 Explain the main factors that may be associated with this customer's churn risk.
 
-### Risk Summary
+## Risk Summary
 Give a short interpretation of the predicted risk.
 
-### Recommended Actions
+## Recommended Actions
 Suggest 2 or 3 practical customer-retention actions.
 
-Do not claim that any individual feature definitely caused the prediction.
-Explain that the prediction is based on the machine learning model.
+Important:
+- Keep the entire response concise.
+- Do not add any extra sections.
+- Do not add an introduction or conclusion.
+- Make sure all 3 recommended actions are completed.
+- Do not stop before completing the third action.
+- Do not claim that any individual feature definitely caused the prediction. 
+- Explain that the prediction is based on the machine learning model.
 """
 
     try:
 
         response = client.chat.completions.create(
-            model = "llama-3.3-70b-versatile",
+            model = os.getenv("GROQ_MODEL"),
             messages = [
                 {
                     "role": "system",
@@ -93,5 +104,5 @@ Explain that the prediction is based on the machine learning model.
         return response.choices[0].message.content
 
     except Exception as e:
-
+        print("AI ERROR:", e)
         return None

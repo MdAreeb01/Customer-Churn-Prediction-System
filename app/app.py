@@ -485,6 +485,7 @@ elif page == "Predict Customer Churn":
 
         else:
             with st.spinner("Predicting customer churn..."):
+
                 prediction, probability, risk = predict_customer(
                     gender,
                     senior,
@@ -660,7 +661,7 @@ elif page == "Predict Customer Churn":
         if "ai_explanation" not in st.session_state:
             st.session_state.ai_explanation = None
 
-        if st.button("✨ Generate AI Explanation", type = "secondary"):
+        if st.button("✨ Generate AI Explanation", type = "secondary", key = "generate_ai_explanation"):
 
             with st.spinner("Analyzing customer risk with AI..."):
 
@@ -689,14 +690,14 @@ elif page == "Predict Customer Churn":
                 # Store the final explanation in session state
                 st.session_state.ai_explanation = explanation
 
-                st.markdown("### AI Analysis")
-
                 # Stream the completed AI response with a typewriter
                 # Reserve the AI area before starting the animation
                 with st.container(
                     border = True,
                     height = 500
                 ):
+
+                    st.markdown("### AI Analysis")
 
                     st.write_stream(
                         stream_ai_response(explanation),
@@ -725,22 +726,12 @@ elif page == "Predict Customer Churn":
 
         st.divider()
 
-        save_area = st.empty()
+        # Save Prediction
+        save_col1, save_col2, save_col3 = st.columns([1, 2, 1])
 
-        with save_area.container():
+        with save_col2:
 
-            save_col1, save_col2, save_col3 = st.columns([1, 2, 1])
-
-            with save_col2:
-
-                save_clicked = st.button(
-                    "💾 Save Prediction",
-                    type = "primary",
-                    use_container_width = True
-                )
-
-            if save_clicked:
-
+            def handle_save_prediction():
                 data = st.session_state.customer_data
 
                 saved = save_prediction(
@@ -753,32 +744,50 @@ elif page == "Predict Customer Churn":
                     data["internet_service"],
                     data["contract"],
                     data["monthly_charges"],
-                    prediction,
-                    probability,
-                    risk
+                    st.session_state.prediction,
+                    st.session_state.probability,
+                    st.session_state.risk
                 )
 
                 if saved:
-
-                    # Show toast after page refresh
                     st.session_state.show_saved_toast = True
 
-                    # Remove previous prediction
                     st.session_state.pop("prediction", None)
                     st.session_state.pop("probability", None)
                     st.session_state.pop("risk", None)
                     st.session_state.pop("customer_data", None)
                     st.session_state.pop("ai_explanation", None)
 
-                    # Create a completely new set of input widgets
                     st.session_state.form_version += 1
+                    st.session_state.save_success = True
 
-                    # Refresh Page
-                    st.rerun()
-                    
                 else:
-                    st.error("Unable to save prediction. "
-                                "Please check the database connection.")
+                    st.session_state.save_success = False
+
+
+            st.button(
+                "💾 Save Prediction",
+                type="primary",
+                use_container_width=True,
+                key="save_prediction",
+                on_click=handle_save_prediction
+            )
+
+
+        # Rerun only after callback has completed
+        if st.session_state.get("save_success"):
+
+            st.session_state.pop("save_success", None)
+            st.rerun()
+
+        elif st.session_state.get("save_success") is False:
+
+            st.session_state.pop("save_success", None)
+
+            st.error(
+                "Unable to save prediction. "
+                "Please check the database connection."
+            )
 
 elif page == "Prediction History":
     

@@ -233,7 +233,7 @@ AI-generated recommendations should be treated as decision-support information a
 - Streamlit
 - Plotly
 - Groq API
-- Llama 3.3 70B
+- OpenAI's gpt-oss-120b
 
 ### Database
 
@@ -362,6 +362,8 @@ MYSQL_PORT=3306
 MYSQL_USER=root
 MYSQL_PASSWORD=your_password
 MYSQL_DATABASE=customer_churn_db
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=openai/gpt-oss-120b
 ```
 Do not commit the .env file to GitHub.
 
