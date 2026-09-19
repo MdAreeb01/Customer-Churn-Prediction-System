@@ -85,6 +85,7 @@ def save_prediction(
                 float(round(probability * 100, 2)),
                 str(risk),
                 prediction_date
+                
             )
         )
         connection.commit()
