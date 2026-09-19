@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import mysql.connector
 import joblib
 from prediction import predict_customer
@@ -167,7 +168,7 @@ def stream_ai_response(text):
 
 if page == "Home":
 
-    current_time = datetime.now()
+    current_time = datetime.now(ZoneInfo("Asia/Kolkata"))
 
     hero_section_details()
 
