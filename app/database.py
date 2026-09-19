@@ -3,6 +3,8 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # Find .env in project root
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +41,8 @@ def save_prediction(
 
     total_charges = tenure * monthly_charges
 
+    prediction_date = datetime.now(ZoneInfo("Asia/Kolkata"))
+
     query = """
     INSERT INTO churn_predictions(
 
@@ -54,11 +58,12 @@ def save_prediction(
         TotalCharges,
         ChurnPrediction,
         ChurnProbability,
-        RiskLevel
+        RiskLevel,
+        prediction_date
         
     )
 
-    VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
 
     """
     try: 
@@ -78,7 +83,8 @@ def save_prediction(
                 float(total_charges),
                 "Yes" if int(prediction) == 1 else "No",
                 float(round(probability * 100, 2)),
-                str(risk)
+                str(risk),
+                prediction_date
             )
         )
         connection.commit()
