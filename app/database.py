@@ -42,6 +42,8 @@ def save_prediction(
     total_charges = tenure * monthly_charges
 
     prediction_date = datetime.now(ZoneInfo("Asia/Kolkata"))
+    import streamlit as st
+    st.write("DEBUG prediction_date:", prediction_date)     
 
     query = """
     INSERT INTO churn_predictions(
